@@ -111,10 +111,14 @@ const Home = () => {
       const img = new Image();
       img.onload = () => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+
         const context = canvas.getContext("2d");
+        if (!context) return;
 
         canvas.width = img.width;
         canvas.height = img.height;
+
         context.drawImage(img, 0, 0);
 
         try {
@@ -124,18 +128,31 @@ const Home = () => {
             canvas.width,
             canvas.height
           );
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+          const code = jsQR(
+            imageData.data,
+            imageData.width,
+            imageData.height
+          );
 
           if (code) {
             setResult(code.data);
           } else {
-            setError("No QR code detected in the uploaded image.");
+            setError("No QR code found in image");
           }
-        } catch (err) {
-          setError("Unable to process the uploaded image.");
+        } catch (error) {
+          console.error(error);
+          setError("Error scanning image");
         }
       };
-      img.src = e.target.result;
+
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+        const result = e.target?.result;
+        if (!result || typeof result !== "string") return;
+
+        img.src = result;
+};
+
     };
 
     reader.readAsDataURL(file);
