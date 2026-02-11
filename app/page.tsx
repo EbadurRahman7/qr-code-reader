@@ -13,7 +13,8 @@ const Home = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   // Check if camera is available
   useEffect(() => {
