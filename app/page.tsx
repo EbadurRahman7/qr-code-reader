@@ -76,13 +76,17 @@ const Home = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
+
     if (!video || !canvas) return;
     const context = canvas.getContext("2d");
+    if (!context) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
     try {
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
