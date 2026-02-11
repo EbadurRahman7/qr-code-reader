@@ -10,9 +10,9 @@ const Home = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState("");
   const [hasCamera, setHasCamera] = useState(true);
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef(null);
-  const streamRef = useRef(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef(null);
 
   // Check if camera is available
