@@ -100,8 +100,8 @@ const Home = () => {
     }
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     setError("");
