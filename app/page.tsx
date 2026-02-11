@@ -11,7 +11,7 @@ const Home = () => {
   const [error, setError] = useState("");
   const [hasCamera, setHasCamera] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -76,6 +76,8 @@ const Home = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
+    
+    if (!video || !canvas) return;
     const context = canvas.getContext("2d");
 
     canvas.width = video.videoWidth;
