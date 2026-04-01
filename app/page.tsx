@@ -36,9 +36,10 @@ const Home = () => {
     }
   };
 
-  const startCamera = async () => {
+    const startCamera = async () => {
     try {
       setError("");
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
@@ -46,17 +47,21 @@ const Home = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+
+        await videoRef.current.play();
+
         setIsScanning(true);
 
-        // Start scanning for QR codes
-        scanIntervalRef.current = setInterval(scanQRCode, 500);
+        setTimeout(() => {
+          scanIntervalRef.current = setInterval(scanQRCode, 500);
+        }, 500);
       }
     } catch (err) {
+      console.error(err);
       setError("Unable to access camera. Please allow camera permissions.");
       setHasCamera(false);
     }
   };
-
   const stopScanning = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -71,32 +76,31 @@ const Home = () => {
     setIsScanning(false);
   };
 
-  const scanQRCode = () => {
+    const scanQRCode = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
-    if (!video || !canvas) return;
     const context = canvas.getContext("2d");
-    if (!context) return;
+
+    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(scanQRCode);
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    context.drawImage(video, 0, 0);
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-    try {
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
-      if (code) {
-        setResult(code.data);
-        stopScanning();
-      }
-    } catch (err) {
-      console.error("QR Scan Error:", err);
+    if (code) {
+      setResult(code.data);
+      stopScanning();
+    } else {
+      requestAnimationFrame(scanQRCode);
     }
   };
 
@@ -108,56 +112,48 @@ const Home = () => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      const img = new Image();
+    const result = e.target?.result;
+    if (!result || typeof result !== "string") return;
+
+    const img = new Image();
+
       img.onload = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-        const context = canvas.getContext("2d");
-        if (!context) return;
+      const context = canvas.getContext("2d");
+      if (!context) return;
 
-        canvas.width = img.width;
-        canvas.height = img.height;
+      canvas.width = img.width;
+      canvas.height = img.height;
 
-        context.drawImage(img, 0, 0);
+      context.drawImage(img, 0, 0);
 
-        try {
-          const imageData = context.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
+      const imageData = context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
-          const code = jsQR(
-            imageData.data,
-            imageData.width,
-            imageData.height
-          );
+      const code = jsQR(
+        imageData.data,
+        imageData.width,
+        imageData.height
+      );
 
-          if (code) {
-            setResult(code.data);
-          } else {
-            setError("No QR code found in image");
-          }
-        } catch (error) {
-          console.error(error);
-          setError("Error scanning image");
-        }
-      };
-
-            reader.onload = (e: ProgressEvent<FileReader>) => {
-        const result = e.target?.result;
-        if (!result || typeof result !== "string") return;
-
-        img.src = result;
-};
-
+      if (code) {
+        setResult(code.data);
+      } else {
+        setError("No QR code found in image");
+      }
     };
 
-    reader.readAsDataURL(file);
+    img.src = result;
   };
 
+  reader.readAsDataURL(file);
+};
   const resetReader = () => {
     setResult("");
     setError("");
